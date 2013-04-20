@@ -3,7 +3,7 @@ A Bit Different
 
 A watchface for the Pebble smartwatch, based on 'Just A Bit'. [Download it.](https://dl.dropboxusercontent.com/u/2312259/a_bit_different.pbw)
 
-![a_bit_different watchface](https://github.com/keelanc/a_bit_different/blob/master/abitdifferent.jpg)
+![a_bit_different watchface](https://raw.github.com/keelanc/a_bit_different/master/abitdifferent.jpg)
 
 It's easier for me to read the binary this way.
 
