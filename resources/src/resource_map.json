@@ -5,8 +5,8 @@
 
         {
         "type": "font",
-        "defName": "FONT_GOTHAM_LIGHT_24",
-        "file": "fonts/Gotham-Light.ttf"
+        "defName": "FONT_GOTHAM_BOLD_18",
+        "file": "fonts/Gotham-Bold.ttf"
         },
         
            

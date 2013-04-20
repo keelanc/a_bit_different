@@ -1,28 +1,36 @@
 /*
- A Bit Different
- Keelan Chu For
- keelanchufor.com
  
- Based on Just A Bit
+ A Bit Different
+ 
+ https://github.com/keelanc/a_bit_different
+ 
+ Based on the Pebble team's Just A Bit
  
  */
 
 #include "pebble_os.h"
 #include "pebble_app.h"
 #include "pebble_fonts.h"
+#include "hobbit_meals.h"
 
 
 #define MY_UUID { 0x11, 0x28, 0xB6, 0x9D, 0x9F, 0xBA, 0x48, 0x27, 0x8B, 0x18, 0xD2, 0x47, 0x74, 0x56, 0xC7, 0x8C }
 PBL_APP_INFO(MY_UUID,
-             "A Bit Diff", "keelanchufor",
-             1, 0, /* App version */
+             "A Bit Diff", "keelanchufor.com",
+             1, 1, /* App version */
              DEFAULT_MENU_ICON,
              APP_INFO_WATCH_FACE);
 
 Window window;
 Layer display_layer;
+TextLayer text_month_layer;
 TextLayer text_date_layer;
-TextLayer text_extra_layer;
+TextLayer text_hobbit_layer;
+
+
+static char mon_text[] = "XXX";
+static char date_text[] = "00";
+static char hobbit_hour[] = "something quite long";
 
 
 #define CIRCLE_RADIUS 10
@@ -50,7 +58,7 @@ void draw_cell(GContext* ctx, GPoint center, bool filled) {
 
 #define CIRCLE_PADDING 12 - CIRCLE_RADIUS // Number of padding pixels on each side
 #define CELL_SIZE (2 * (CIRCLE_RADIUS + CIRCLE_PADDING)) // One "cell" is the square that contains the circle.
-#define TOP_PADDING (168 - (CELLS_PER_COLUMN * CELL_SIZE))/2
+#define TOP_PADDING (168 - (CELLS_PER_COLUMN * CELL_SIZE))
 
 
 GPoint get_center_point_from_cell_location(unsigned short x, unsigned short y) {
@@ -122,6 +130,19 @@ void display_layer_update_callback(Layer *me, GContext* ctx) {
 }
 
 
+void update_watchface(PblTm* t) {
+	
+	string_format_time(mon_text, sizeof(mon_text), "%b", t);
+	string_format_time(date_text, sizeof(date_text), "%e", t);
+	text_layer_set_text(&text_month_layer, mon_text);
+	text_layer_set_text(&text_date_layer, date_text);
+	
+	hobbit_time(t->tm_hour, hobbit_hour);
+	text_layer_set_text(&text_hobbit_layer, hobbit_hour);
+	
+}
+
+
 void handle_init(AppContextRef ctx) {
 	// initializing app
 	
@@ -139,33 +160,41 @@ void handle_init(AppContextRef ctx) {
 	
 	resource_init_current_app(&APP_RESOURCES);
 
+	// init the month text layer
+	text_layer_init(&text_month_layer, GRect(0, 0, 144/*width 144*/, TOP_PADDING/* height 168*/)); /* REF: void text_layer_init(TextLayer *text_layer, GRect frame); Erases the contents of a text layer and set the following default values: – Font: Raster Gothic 14-point Boldface – Text Alignment: Left – Text color: black – Background color: white – Clips: True – Caching: False The text layer is automatically marked dirty after this operation This sets up the text layer to use the correct graphics subroutines for filling in the background color and text drawing.*/
+	text_layer_set_font(&text_month_layer, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_GOTHAM_LIGHT_18)));
+	text_layer_set_text_color(&text_month_layer, GColorWhite);
+	text_layer_set_background_color(&text_month_layer, GColorClear);
+	layer_add_child(&window.layer, &text_month_layer.layer);
+	
 	// init the date text layer
-	text_layer_init(&text_date_layer, GRect(0, 0, 144/*width 144*/, TOP_PADDING/* height 168*/)); /* REF: void text_layer_init(TextLayer *text_layer, GRect frame); Erases the contents of a text layer and set the following default values: – Font: Raster Gothic 14-point Boldface – Text Alignment: Left – Text color: black – Background color: white – Clips: True – Caching: False The text layer is automatically marked dirty after this operation This sets up the text layer to use the correct graphics subroutines for filling in the background color and text drawing.*/
-	text_layer_set_font(&text_date_layer, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_GOTHAM_LIGHT_18)));
+	text_layer_init(&text_date_layer, GRect(40, 0, 144 - 40, TOP_PADDING));
+	text_layer_set_font(&text_date_layer, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_GOTHAM_BOLD_18)));
 	text_layer_set_text_color(&text_date_layer, GColorWhite);
 	text_layer_set_background_color(&text_date_layer, GColorClear);
 	layer_add_child(&window.layer, &text_date_layer.layer);
 	
-	// init the extra text layer
-	text_layer_init(&text_extra_layer, GRect(0, 168 - TOP_PADDING, 144/*width 144*/, TOP_PADDING/* height 168*/));
-	text_layer_set_text(&text_extra_layer, "humpday");
-	text_layer_set_font(&text_extra_layer, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_GOTHAM_LIGHT_18)));
-	text_layer_set_text_alignment(&text_extra_layer, GTextAlignmentRight);
-	text_layer_set_text_color(&text_extra_layer, GColorWhite);
-	text_layer_set_background_color(&text_extra_layer, GColorClear);
-	layer_add_child(&window.layer, &text_extra_layer.layer);
+	// init the hobbit text layer
+	text_layer_init(&text_hobbit_layer, GRect(0, 20, 144, TOP_PADDING - 20));
+	text_layer_set_font(&text_hobbit_layer, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_GOTHAM_LIGHT_18)));
+	text_layer_set_text_color(&text_hobbit_layer, GColorWhite);
+	text_layer_set_background_color(&text_hobbit_layer, GColorClear);
+	layer_add_child(&window.layer, &text_hobbit_layer.layer);
+	
+	// load watchface immediately
+	PblTm t;
+	get_time(&t);
+	update_watchface(&t);
 }
 
 
 void handle_tick(AppContextRef ctx, PebbleTickEvent *t) {
 	// doing something on the second
 	
-	// Need to be static because it's used by the system later.
-	static char date_text[] = "XXX 00";
-	string_format_time(date_text, sizeof(date_text), "%b %e", t->tick_time);
-	text_layer_set_text(&text_date_layer, date_text);
+	(void)ctx;
 	
-	//layer_mark_dirty(&display_layer);
+	update_watchface(t->tick_time);
+	
 }
 
 
@@ -175,7 +204,6 @@ void pbl_main(void *params) {
 	  .tick_info = {
 		  .tick_handler = &handle_tick,
 		  .tick_units = SECOND_UNIT
-		//  .tick_units = MINUTE_UNIT
 	  }
   };
   app_event_loop(params, &handlers);
