@@ -79,7 +79,7 @@ void draw_cell_column_for_digit(GContext* ctx, unsigned short digit, unsigned sh
 }
 
 
-// The cell row offsets for each digit
+// The cell column offsets for each digit
 #define HOURS_FIRST_DIGIT_COL 0
 #define HOURS_SECOND_DIGIT_COL 1
 #define MINUTES_FIRST_DIGIT_COL 2
